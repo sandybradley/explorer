@@ -27,7 +27,7 @@ def background_thread():
     while True:
         socketio.sleep(1)
         count += 1
-        blocks = web3.eth.blockNumber
+        blocks = web3.eth.block_number
         socketio.emit('my_response',
                       {'data': str(blocks), 'count': count})
 
@@ -38,7 +38,7 @@ def connect():
     with thread_lock:
         if thread is None:
             thread = socketio.start_background_task(background_thread)
-    block = web3.eth.blockNumber
+    block = web3.eth.block_number
     emit('my_response', {'data': str(block), 'count': 0})
 
 
@@ -47,7 +47,7 @@ def site():
 
 
 def isToken(address):
-    if len(web3.eth.getCode(address)) < 40:
+    if len(web3.eth.get_code(address)) < 40:
         return False
     else:
         return True
@@ -94,8 +94,8 @@ def index():
         account = "<p class=\"upperRight\" style=\"margin-right: 44ch;\">Your address: </p><a class=\"upperRight\" href=\"/account/{acc}\">{acc}</a>".format(
             acc=acc)
     latestBlock = web3.eth.block_number
-    gasPrice = web3.fromWei(web3.eth.gasPrice, "gwei")
-    return render_template("index.html", coinSymbolLower=coinSymbolLower, latestBlock=latestBlock, gasPrice=gasPrice, account=account, hasAccount=hasAccount)
+    gas_price = web3.from_wei(web3.eth.gas_price, "gwei")
+    return render_template("index.html", coinSymbolLower=coinSymbolLower, latestBlock=latestBlock, gas_price=gas_price, account=account, hasAccount=hasAccount)
 
 # --- API block --- #
 
@@ -115,7 +115,7 @@ def api_txhash(txhash):
 @app.route("/api/balance/<address>")
 def api_balance(address):
     address = web3.toChecksumAddress(address)
-    balance = str(web3.eth.getBalance(address))
+    balance = str(web3.eth.get_balance(address))
     return balance
 # --- End API block --- #
 
@@ -224,8 +224,8 @@ def bloominfo(block):
     except:
         return render_template("error.html", error="Block not found")
     bloom = block["logsBloom"].hex()
-    blockNumber = block["number"]
-    return render_template("bloominfo.html", bloom=bloom, blockNumber=blockNumber, coinSymbolLower=coinSymbolLower, coinSymbol=coinSymbol)
+    block_number = block["number"]
+    return render_template("bloominfo.html", bloom=bloom, block_number=block_number, coinSymbolLower=coinSymbolLower, coinSymbol=coinSymbol)
 
 
 @app.route("/account/<address>")
@@ -239,9 +239,9 @@ def account(address):
     if isToken(address):
         # return render_template("error.html", error="заглушка для токена", coinSymbolLower=coinSymbolLower)
         return redirect(f"/token/{address}")
-    balance = web3.eth.getBalance(address)
-    nonce = web3.eth.getTransactionCount(address)
-    balance_eth = web3.fromWei(balance, "ether")
+    balance = web3.eth.get_balance(address)
+    nonce = web3.eth.get_transaction_count(address)
+    balance_eth = web3.from_wei(balance, "ether")
 
     return render_template("account.html", address=address, balance_eth=balance_eth, nonce=str(nonce), coinSymbolLower=coinSymbolLower, coinSymbol=coinSymbol)
 
@@ -255,16 +255,16 @@ def tx(txhash):
     txFrom = tx["from"]
     txTo = [web3.eth.get_transaction_receipt(txhash)["contractAddress"], "c"]
     txGas = tx["gas"]
-    gasPriceWei = tx["gasPrice"]
-    txGasPriceUnformatted = web3.fromWei(gasPriceWei, "ether")
+    gasPriceWei = tx["gas_price"]
+    txGasPriceUnformatted = web3.from_wei(gasPriceWei, "ether")
     txGasPrice = format(txGasPriceUnformatted, '.18f')
     txHash = tx["hash"].hex()
     txNonce = tx["nonce"]
     txValueWei = tx["value"]
-    txValueUnformatted = web3.fromWei(txValueWei, "ether")
+    txValueUnformatted = web3.from_wei(txValueWei, "ether")
     txValue = format(txValueUnformatted, '.18f')
     txBlockHash = tx["blockHash"]
-    txBlockNumber = tx["blockNumber"]
+    txBlockNumber = tx["block_number"]
     if not txBlockNumber:
         txStatus = "Unconfirmed"
     else:
@@ -326,7 +326,7 @@ def token(address):
     name = getName(address)
     symbol = getSymbol(address)
     totalSupply = getTotalSupply(address)
-    totalSupply = web3.fromWei(totalSupply, "ether")
+    totalSupply = web3.from_wei(totalSupply, "ether")
     totalSupply = format(totalSupply, '.18f')
     return render_template("token.html", tokenAddress=address, tokenDecimals=decimals, tokenName=name, tokenSymbol=symbol, tokenTotalSupply=totalSupply, coinSymbolLower=coinSymbolLower, coinSymbol=coinSymbol)
 
